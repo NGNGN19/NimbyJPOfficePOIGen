@@ -1,0 +1,7 @@
+[out:csv(::lon,::lat,"name")];
+(area[name="東京都"];)->.a;
+(node(area.a)[place=neighbourhood];)->.aa;
+(area[name="江戸川区"];)->.b;
+(node(area.b)[place=neighbourhood];)->.bb;
+node.aa.bb;
+out;
