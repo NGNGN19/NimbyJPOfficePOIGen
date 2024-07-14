@@ -92,7 +92,7 @@ def combine_pop_loc(name_c, name_w):
                               'font_size': 0,
                               'max_lod': 0,
                               'transparent': 1,
-                              'demand': "KM_Office",
+                              'demand': "default",
                               'population': 0}
                     todict['text'] = loc_item['name']
                     todict['lon'] = loc_item['lon']
@@ -145,12 +145,12 @@ def get_loc_overpy(pref_name, city_name):
     file_path = f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     #write_to_tsv(f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv", to_write_col, data)
-    with open(file_path, "w") as f:
+    with open(file_path, "w") as file:
         # 写入头部
-        f.write("\t".join(to_write_col) + "\n")
+        file.write("\t".join(to_write_col) + "\n")
         # 写入数据
         for row in data:
-            f.write("\t".join(map(str, row)) + "\n")
+            file.write("\t".join(map(str, row)) + "\n")
 
 
 def get_pop_from_excel(pref_name, city_name, path, is_seireishi=False):
@@ -172,15 +172,26 @@ def get_pop_from_excel(pref_name, city_name, path, is_seireishi=False):
                      sep='\t', index=False, header=False)
 
 
+def write_mod_txt(pref_name, city_name):
+    file_path = f"data/{pref_name['en']}/mod.txt"
+    with open(file_path, 'a') as file:
+        file.write(f"\n[POILayer]\n")
+        file.write(f"id=KM_{pref_name['en']}_{city_name['en']}\n")
+        file.write(f"name={pref_name['jp']}——{city_name['jp']}\n")
+        file.write(f"tsv=KM_{pref_name['en']}_{city_name['en']}.tsv\n")
+
+
 if __name__ == "__main__":
     prefecture_name = 'Osakashi'
     seireishi = True
     xlsx_path = 'b2_032-1_27'
     pref_name_dict, city_name_list = read_name_list(prefecture_name)
-    #print(pref_name_dict["en"])
-    #print(city_name_list)
+    desc = f'Hiring Data POI of {prefecture_name}'
+    with open(f"data/{pref_name_dict['en']}/mod.txt", 'a') as f:
+        f.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0")
     for city_name_dict in city_name_list:
         get_loc_overpy(pref_name_dict, city_name_dict)
         get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, seireishi)
         combine_pop_loc(pref_name_dict, city_name_dict)
-
+        write_mod_txt(pref_name_dict, city_name_dict)
+        print(f"{city_name_dict['en']} done")
