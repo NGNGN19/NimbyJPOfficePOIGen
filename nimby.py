@@ -1,5 +1,10 @@
 import csv
-from pathlib import Path
+import json
+import overpy
+import pandas as pd
+import os
+
+
 def write_to_tsv(output_path: str, file_columns: list, data: list):
     csv.register_dialect('tsv_dialect', delimiter='\t', quoting=csv.QUOTE_NONE)
     with open(output_path, "w", newline="",encoding="utf8") as wf:
@@ -56,13 +61,13 @@ def zenkaku_replace(item:dict):
 
 
 def combine_pop_loc(name_c, name_w):
-        loc_path = f"data/{name_c}/{name_c}_{name_w}_loc.tsv"
-        pop_path = f"data/{name_c}/{name_c}_{name_w}_pop.csv"
+        loc_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_loc.tsv"
+        pop_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_pop.tsv"
         loc_col = ["lon", "lat", "name"]
         loc_read = read_from_tsv(loc_path, loc_col)
         # print(loc_read)
         pop_col = ["name", "population"]
-        pop_read = read_from_csv(pop_path, pop_col)
+        pop_read = read_from_tsv(pop_path, pop_col)
         # print(pop_read)
         to_write = []
         todict1 = {'lon': 'lon',
@@ -96,17 +101,86 @@ def combine_pop_loc(name_c, name_w):
                     to_write.append(todict)
 
         to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
-        write_to_tsv(f"data/{name_c}/KM_{name_c}_{name_w}.tsv", to_write_col, to_write)
+        write_to_tsv(f"data/{name_c['en']}/KM_{name_c['en']}_{name_w['en']}.tsv", to_write_col, to_write)
 
 
-city_name = 'Kawasaki'
+# city_name = 'Kawasaki'
 # ward_name = 'Chiyoda'
 # ward_name = input('Input name:')
 # ward_name_list = ['Tsurumi','Kanagawa','Nishi','Naka','Minami','Hodogaya','Isogo',
 #                   'Kanazawa','Kohoku','Totsuka','Konan','Asahi','Midori','Seya',
 #                   'Sakae','Izumi','Aoba','Tsuzuki']
-ward_name_list = ['Kawasaki',"Saiwai","Nakahara",'Takatsu','Tama','Miyamae','Asao']
+# ward_name_list = ['Kawasaki',"Saiwai","Nakahara",'Takatsu','Tama','Miyamae','Asao']
 
-for names in ward_name_list:
-    combine_pop_loc(city_name,names)
+#for names in ward_name_list:
+#    combine_pop_loc(city_name,names)
+
+def read_name_list(pref_name):
+    with open(f'lists/{pref_name}.json', 'r') as json_file:
+        data = json.load(json_file)
+    pref_nl = data['pref']
+    city_nl = data['city']
+
+    return pref_nl, city_nl
+
+
+def get_loc_overpy(pref_name, city_name):
+    api = overpy.Overpass()
+    query = f"""
+    [out:json];
+    (area[name="{pref_name['jp']}"];)->.a;
+    (node(area.a)[place=neighbourhood];)->.aa;
+    (area[name="{city_name['jp']}"];)->.b;
+    (node(area.b)[place=neighbourhood];)->.bb;
+    node.aa.bb;
+    out;
+    """
+
+    result = api.query(query)
+    data = []
+    for node in result.nodes:
+        name = node.tags.get("name", '')
+        data.append([node.lon, node.lat, name])
+    to_write_col = ['lon', 'lat', 'name']
+    file_path = f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv"
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    #write_to_tsv(f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv", to_write_col, data)
+    with open(file_path, "w") as f:
+        # 写入头部
+        f.write("\t".join(to_write_col) + "\n")
+        # 写入数据
+        for row in data:
+            f.write("\t".join(map(str, row)) + "\n")
+
+
+def get_pop_from_excel(pref_name, city_name, path, is_seireishi=False):
+    df = pd.read_excel(f'xls/{path}.xlsx', sheet_name=f'{path}')
+
+    # 假设你要筛选的列名为 'ColumnA'，特定元素为 'Value'
+    filter_column_index = 3
+    if is_seireishi:
+        filter_value = f"{pref_name['jp']}{city_name['jp']}"
+    else:
+        filter_value = city_name['jp']
+    filtered_df = df[df.iloc[:, filter_column_index] == filter_value]
+
+    # 提取筛选行中的特定列，假设这些列是第1列和第2列（ColumnB 和 ColumnC）
+    selected_column_indices = [4, 6]
+    result_df = filtered_df.iloc[:, selected_column_indices]
+    # 打印结果
+    result_df.to_csv(f'data/{pref_name["en"]}/{pref_name["en"]}_{city_name["en"]}_pop.tsv',
+                     sep='\t', index=False, header=False)
+
+
+if __name__ == "__main__":
+    prefecture_name = 'Osakashi'
+    seireishi = True
+    xlsx_path = 'b2_032-1_27'
+    pref_name_dict, city_name_list = read_name_list(prefecture_name)
+    #print(pref_name_dict["en"])
+    #print(city_name_list)
+    for city_name_dict in city_name_list:
+        get_loc_overpy(pref_name_dict, city_name_dict)
+        get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, seireishi)
+        combine_pop_loc(pref_name_dict, city_name_dict)
 
