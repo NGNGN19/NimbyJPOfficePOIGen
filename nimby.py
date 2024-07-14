@@ -182,12 +182,14 @@ def write_mod_txt(pref_name, city_name):
 
 
 if __name__ == "__main__":
-    prefecture_name = 'Osakashi'
+    prefecture_name = 'Kobe'
     seireishi = True
-    xlsx_path = 'b2_032-1_27'
+    xlsx_path = 'b2_032-1_28'
     pref_name_dict, city_name_list = read_name_list(prefecture_name)
+    mod_path = f"data/{pref_name_dict['en']}/mod.txt"
     desc = f'Hiring Data POI of {prefecture_name}'
-    with open(f"data/{pref_name_dict['en']}/mod.txt", 'a') as f:
+    os.makedirs(os.path.dirname(mod_path), exist_ok=True)
+    with open(mod_path, 'a') as f:
         f.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0")
     for city_name_dict in city_name_list:
         get_loc_overpy(pref_name_dict, city_name_dict)
