@@ -3,6 +3,7 @@ import json
 import overpy
 import pandas as pd
 import os
+from zenkaku_replace import zenkaku_replace
 
 
 def write_to_tsv(output_path: str, file_columns: list, data: list):
@@ -37,29 +38,6 @@ def read_from_tsv(file_path: str, column_names: list) -> list:
     return datas
 
 
-def zenkaku_replace(item:dict):
-    item["name"] = item["name"].replace("一丁目","１丁目")
-    item["name"] = item["name"].replace("二丁目","２丁目")
-    item["name"] = item["name"].replace("三丁目","３丁目")
-    item["name"] = item["name"].replace("四丁目","４丁目")
-    item["name"] = item["name"].replace("五丁目","５丁目")
-    item["name"] = item["name"].replace("六丁目","６丁目")
-    item["name"] = item["name"].replace("七丁目","７丁目")
-    item["name"] = item["name"].replace("八丁目","８丁目")
-    item["name"] = item["name"].replace("九丁目","９丁目")
-    item["name"] = item["name"].replace("十丁目","１０丁目")
-    item["name"] = item["name"].replace("1丁目","１丁目")
-    item["name"] = item["name"].replace("2丁目","２丁目")
-    item["name"] = item["name"].replace("3丁目","３丁目")
-    item["name"] = item["name"].replace("4丁目","４丁目")
-    item["name"] = item["name"].replace("5丁目","５丁目")
-    item["name"] = item["name"].replace("6丁目","６丁目")
-    item["name"] = item["name"].replace("7丁目","７丁目")
-    item["name"] = item["name"].replace("8丁目","８丁目")
-    item["name"] = item["name"].replace("9丁目","９丁目")
-    item["name"] = item["name"].replace("10丁目","１０丁目")
-
-
 def combine_pop_loc(name_c, name_w):
         loc_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_loc.tsv"
         pop_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_pop.tsv"
@@ -83,7 +61,7 @@ def combine_pop_loc(name_c, name_w):
 
         for loc_item in loc_read:
             for pop_item in pop_read:
-                zenkaku_replace(loc_item)
+                #zenkaku_replace(loc_item)
                 if loc_item["name"] == pop_item['name']:
                     todict = {'lon': 0,
                               'lat': 0,
@@ -101,7 +79,8 @@ def combine_pop_loc(name_c, name_w):
                     to_write.append(todict)
 
         to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
-        write_to_tsv(f"data/{name_c['en']}/KM_{name_c['en']}_{name_w['en']}.tsv", to_write_col, to_write)
+        write_to_tsv(f"mod/KM_POI_{name_c['en']}/KM_{name_c['en']}_{name_w['en']}.tsv",
+                     to_write_col, to_write)
 
 
 # city_name = 'Kawasaki'
@@ -116,7 +95,7 @@ def combine_pop_loc(name_c, name_w):
 #    combine_pop_loc(city_name,names)
 
 def read_name_list(pref_name):
-    with open(f'lists/{pref_name}.json', 'r') as json_file:
+    with open(f'lists/{pref_name}.json', 'r', encoding='utf-8') as json_file:
         data = json.load(json_file)
     pref_nl = data['pref']
     city_nl = data['city']
@@ -126,26 +105,40 @@ def read_name_list(pref_name):
 
 def get_loc_overpy(pref_name, city_name):
     api = overpy.Overpass()
-    query = f"""
-    [out:json];
-    (area[name="{pref_name['jp']}"];)->.a;
-    (node(area.a)[place=neighbourhood];)->.aa;
-    (area[name="{city_name['jp']}"];)->.b;
-    (node(area.b)[place=neighbourhood];)->.bb;
-    node.aa.bb;
-    out;
-    """
+    if 'add' in city_name:
+        query = f"""
+            [out:json];
+            (area[name="{pref_name['jp']}"];)->.a;
+            (node(area.a)[place~"^(neighbourhood|quarter)$"];)->.aa;
+            (area[name="{city_name['add']}"];)->.b;
+            (node(area.b)[place~"^(neighbourhood|quarter)$"];)->.bb;
+            (area[name="{city_name['jp']}"];)->.c;
+            (node(area.b)[place~"^(neighbourhood|quarter)$"];)->.cc;
+            node.aa.bb.cc;
+            out;
+            """
+    else:
+        query = f"""
+            [out:json];
+            (area[name="{pref_name['jp']}"];)->.a;
+            (node(area.a)[place~"^(neighbourhood|quarter)$"];)->.aa;
+            (area[name="{city_name['jp']}"];)->.b;
+            (node(area.b)[place~"^(neighbourhood|quarter)$"];)->.bb;
+            node.aa.bb;
+            out;
+            """
 
     result = api.query(query)
     data = []
     for node in result.nodes:
-        name = node.tags.get("name", '')
+        name = node.tags.get("official_name", node.tags.get("name", ""))
+        name = zenkaku_replace(name)
         data.append([node.lon, node.lat, name])
     to_write_col = ['lon', 'lat', 'name']
     file_path = f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     #write_to_tsv(f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv", to_write_col, data)
-    with open(file_path, "w") as file:
+    with open(file_path, "w", encoding='utf-8') as file:
         # 写入头部
         file.write("\t".join(to_write_col) + "\n")
         # 写入数据
@@ -160,6 +153,8 @@ def get_pop_from_excel(pref_name, city_name, path, is_seireishi=False):
     filter_column_index = 3
     if is_seireishi:
         filter_value = f"{pref_name['jp']}{city_name['jp']}"
+    elif 'add' in city_name:
+        filter_value = f"{city_name['add']}{city_name['jp']}"
     else:
         filter_value = city_name['jp']
     filtered_df = df[df.iloc[:, filter_column_index] == filter_value]
@@ -172,28 +167,31 @@ def get_pop_from_excel(pref_name, city_name, path, is_seireishi=False):
                      sep='\t', index=False, header=False)
 
 
-def write_mod_txt(pref_name, city_name):
-    file_path = f"data/{pref_name['en']}/mod.txt"
-    with open(file_path, 'a') as file:
+def write_mod_txt(pref_name, city_name, path):
+    file_path = path
+    with open(file_path, 'a',encoding='utf-8') as file:
         file.write(f"\n[POILayer]\n")
         file.write(f"id=KM_{pref_name['en']}_{city_name['en']}\n")
-        file.write(f"name={pref_name['jp']}——{city_name['jp']}\n")
+        if "add" in city_name:
+            file.write(f"name={pref_name['jp']}——{city_name['add']}——{city_name['jp']}\n")
+        else:
+            file.write(f"name={pref_name['jp']}——{city_name['jp']}\n")
         file.write(f"tsv=KM_{pref_name['en']}_{city_name['en']}.tsv\n")
 
 
 if __name__ == "__main__":
-    prefecture_name = 'Kobe'
-    seireishi = True
+    prefecture_name = 'Hyogo'
+    seireishi = False
     xlsx_path = 'b2_032-1_28'
     pref_name_dict, city_name_list = read_name_list(prefecture_name)
-    mod_path = f"data/{pref_name_dict['en']}/mod.txt"
+    mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
     desc = f'Hiring Data POI of {prefecture_name}'
     os.makedirs(os.path.dirname(mod_path), exist_ok=True)
-    with open(mod_path, 'a') as f:
-        f.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0")
+    with open(mod_path, 'w') as f:
+        f.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
     for city_name_dict in city_name_list:
         get_loc_overpy(pref_name_dict, city_name_dict)
         get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, seireishi)
         combine_pop_loc(pref_name_dict, city_name_dict)
-        write_mod_txt(pref_name_dict, city_name_dict)
+        write_mod_txt(pref_name_dict, city_name_dict, mod_path)
         print(f"{city_name_dict['en']} done")
