@@ -75,7 +75,10 @@ def combine_pop_loc(name_c, name_w):
                     todict['text'] = loc_item['name']
                     todict['lon'] = loc_item['lon']
                     todict['lat'] = loc_item['lat']
-                    todict['population'] = pop_item['population']
+                    if pop_item['population'] == '-':
+                        todict['population'] = 0
+                    else:
+                        todict['population'] = pop_item['population']
                     to_write.append(todict)
 
         to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
@@ -99,8 +102,9 @@ def read_name_list(pref_name):
         data = json.load(json_file)
     pref_nl = data['pref']
     city_nl = data['city']
+    read_num = data['num']
 
-    return pref_nl, city_nl
+    return pref_nl, city_nl, read_num
 
 
 def get_loc_overpy(pref_name, city_name):
@@ -180,10 +184,11 @@ def write_mod_txt(pref_name, city_name, path):
 
 
 if __name__ == "__main__":
-    prefecture_name = 'Hyogo'
+    print('Please enter the list name to generate:')
+    prefecture_name = input()
     seireishi = False
-    xlsx_path = 'b2_032-1_28'
-    pref_name_dict, city_name_list = read_name_list(prefecture_name)
+    pref_name_dict, city_name_list, file_num = read_name_list(prefecture_name)
+    xlsx_path = f'b2_032-1_{file_num}'
     mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
     desc = f'Hiring Data POI of {prefecture_name}'
     os.makedirs(os.path.dirname(mod_path), exist_ok=True)
@@ -195,3 +200,4 @@ if __name__ == "__main__":
         combine_pop_loc(pref_name_dict, city_name_dict)
         write_mod_txt(pref_name_dict, city_name_dict, mod_path)
         print(f"{city_name_dict['en']} done")
+    print("Mod generation finished!")
