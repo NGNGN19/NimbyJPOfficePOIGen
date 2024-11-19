@@ -3,6 +3,7 @@ import json
 import overpy
 import pandas as pd
 import os
+import argparse
 from zenkaku_replace import zenkaku_replace
 
 
@@ -184,9 +185,15 @@ def write_mod_txt(pref_name, city_name, path):
 
 
 if __name__ == "__main__":
-    print('Please enter the list name to generate:')
-    prefecture_name = input()
-    seireishi = False
+    parser = argparse.ArgumentParser(description='Enter the name of the list using --name')
+    parser.add_argument('--name',type=str,help='name of the list')
+    parser.add_argument('--seireishi',type=bool)
+    args = parser.parse_args()
+    if not args.name:
+        args.name = input(print('Please enter the list name to generate:'))
+
+    prefecture_name = args.name
+    seireishi = args.seireishi
     pref_name_dict, city_name_list, file_num = read_name_list(prefecture_name)
     xlsx_path = f'b2_032-1_{file_num}'
     mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
@@ -199,5 +206,5 @@ if __name__ == "__main__":
         get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, seireishi)
         combine_pop_loc(pref_name_dict, city_name_dict)
         write_mod_txt(pref_name_dict, city_name_dict, mod_path)
-        print(f"{city_name_dict['en']} done")
+        print(f"{city_name_dict['jp']} {city_name_dict['en']} done")
     print("Mod generation finished!")
