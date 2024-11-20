@@ -2,43 +2,13 @@ import csv
 import re
 from collections import defaultdict
 import os
+import nimby
+import argparse
 
 
-def write_to_tsv(output_path: str, file_columns: list, data: list):
-    csv.register_dialect('tsv_dialect', delimiter='\t', quoting=csv.QUOTE_NONE)
-    with open(output_path, "w", newline="",encoding="utf8") as wf:
-        writer = csv.DictWriter(wf, fieldnames=file_columns, dialect='tsv_dialect')
-        writer.writerows(data)
-    csv.unregister_dialect('tsv_dialect')
-
-
-def read_from_csv(file_path: str, column_names: list) -> list:
-    csv.register_dialect('csv_dialect', delimiter=',', quoting=csv.QUOTE_ALL)
-    with open(file_path, "r",encoding="utf8") as wf:
-        reader = csv.DictReader(wf, fieldnames=column_names, dialect='csv_dialect')
-        datas = []
-        for row in reader:
-            data = dict(row)
-            datas.append(data)
-    csv.unregister_dialect('csv_dialect')
-    return datas
-
-
-def read_from_tsv(file_path: str, column_names: list) -> list:
-    csv.register_dialect('tsv_dialect', delimiter='\t', quoting=csv.QUOTE_ALL)
-    with open(file_path, "r",encoding="utf8") as wf:
-        reader = csv.DictReader(wf, fieldnames=column_names, dialect='tsv_dialect')
-        datas = []
-        for row in reader:
-            data = dict(row)
-            datas.append(data)
-    csv.unregister_dialect('tsv_dialect')
-    return datas
-
-
-def wrapped_up(toread_path:str):
+def wrapped_up(toread_path:str,dir_name):
     toread_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
-    toread_list = read_from_tsv(toread_path, toread_col)
+    toread_list = nimby.read_from_tsv(toread_path, toread_col)
     towrite_list = []
     todict1 = {'lon': 'lon',
                'lat': 'lat',
@@ -75,7 +45,7 @@ def wrapped_up(toread_path:str):
                   'font_size': 0,
                   'max_lod': 0,
                   'transparent': 1,
-                  'demand': "KM_Office",
+                  'demand': "default",
                   'population': 0}
         for items in values:
             lon_store = lon_store + float(items['lon'])
@@ -84,25 +54,48 @@ def wrapped_up(toread_path:str):
                 items['population'] = int(0)
             pop_store = pop_store + int(items['population'])
             count = count + 1
-        todict['lon'] = lon_store / count
-        todict['lat'] = lat_store / count
+        todict['lon'] = round(lon_store / count, 7)
+        todict['lat'] = round(lat_store / count, 7)
         todict['population'] = pop_store
         towrite_list.append(todict)
     # print(towrite_list)
     to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
     basename = os.path.basename(toread_path)
-    write_to_tsv(f"data/{city_name}/Simp_{basename}", to_write_col, towrite_list)
+    nimby.write_to_tsv(f"mod/KM_Simp_POI_{dir_name}/Simp_{basename}", to_write_col, towrite_list)
+
+def write_gappei_mod(source_path,target_path):
+    old_string = "KM_"
+    new_string = "Simp_KM_"
+    with open(source_path, "r", encoding="utf-8") as f_src:
+        with open(target_path, "w", encoding="utf-8") as f_dst:
+            for line in f_src:
+                modified_line = line.replace(old_string, new_string)
+                f_dst.write(modified_line)
+
+def gappei(city_name:str):
+    directory = f"mod/KM_POI_{city_name}/"
+    mod_path = f"mod/KM_Simp_POI_{city_name}/mod.txt"
+    output_dir = os.path.dirname(mod_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    # 遍历目录中的文件
+    for filename in os.listdir(directory):
+        # 检查文件名是否符合特定的结构，例如以 "file" 开头并且以 ".txt" 结尾
+        if filename.startswith(f'KM_{city_name}') and filename.endswith(".tsv"):
+            filepath = f'{directory}{filename}'
+            #print(f'Wrapping {os.path.basename(filepath)}')
+            wrapped_up(filepath,city_name)
+    write_gappei_mod(f'{directory}/mod.txt',mod_path)
 
 
-city_name = input('Input name:')
-# ward_name = 'Chiyoda'
-# ward_name = input('Input name:')
-# toread_path = f"data/{city_name}/KM_{city_name}_{ward_name}.tsv"
-directory = f"data/{city_name}/"
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Enter the name of the list using --name')
+    parser.add_argument('--name',type=str,help='name of the list')
+    args = parser.parse_args()
+    if not args.name:
+        args.name = input(print('Please enter the list name to generate:'))
 
-# 遍历目录中的文件
-for filename in os.listdir(directory):
-    # 检查文件名是否符合特定的结构，例如以 "file" 开头并且以 ".txt" 结尾
-    if filename.startswith(f'KM_{city_name}') and filename.endswith(".tsv"):
-        wrapped_up(f'{directory}{filename}')
+    pref_name = args.name
+    gappei(pref_name)
 
