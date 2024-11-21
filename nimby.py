@@ -9,6 +9,7 @@ import gappei
 
 
 def write_to_tsv(output_path: str, file_columns: list, data: list):
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     csv.register_dialect('tsv_dialect', delimiter='\t', quoting=csv.QUOTE_NONE)
     with open(output_path, "w", newline="",encoding="utf8") as wf:
         writer = csv.DictWriter(wf, fieldnames=file_columns, dialect='tsv_dialect')
@@ -16,9 +17,9 @@ def write_to_tsv(output_path: str, file_columns: list, data: list):
     csv.unregister_dialect('tsv_dialect')
 
 
-def read_from_csv(file_path: str, column_names: list) -> list:
+def read_from_csv(file_path: str, column_names: list, encoding="utf-8-sig") -> list:
     csv.register_dialect('csv_dialect', delimiter=',', quoting=csv.QUOTE_ALL)
-    with open(file_path, "r",encoding="utf-8-sig") as wf:
+    with open(file_path, "r",encoding=encoding) as wf:
         reader = csv.DictReader(wf, fieldnames=column_names, dialect='csv_dialect')
         datas = []
         for row in reader:
@@ -104,9 +105,9 @@ def read_name_list(pref_name):
         data = json.load(json_file)
     pref_nl = data['pref']
     city_nl = data['city']
-    read_num = data['num']
+    #read_num = data['num']
 
-    return pref_nl, city_nl, read_num
+    return pref_nl, city_nl #, read_num
 
 
 def get_loc_overpy(pref_name, city_name):
@@ -185,30 +186,35 @@ def write_mod_txt(pref_name, city_name, path):
         file.write(f"tsv=KM_{pref_name['en']}_{city_name['en']}.tsv\n")
 
 
+def nimby_main(list_name,get_loc_func,is_seireishi=False):
+    pref_name_dict, city_name_list = read_name_list(list_name)
+    xlsx_path = f'b2_032-1_{pref_name_dict["num"]}'
+    mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
+    desc = f'Hiring Data POI of {pref_name_dict["en"]}'
+    os.makedirs(os.path.dirname(mod_path), exist_ok=True)
+    with open(mod_path, 'w') as f:
+        f.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
+
+    for city_name_dict in city_name_list:
+        get_loc_func(pref_name_dict, city_name_dict)
+        get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path)
+        combine_pop_loc(pref_name_dict, city_name_dict)
+        write_mod_txt(pref_name_dict, city_name_dict, mod_path)
+        print(f"{city_name_dict['jp']} {city_name_dict['en']} done")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Enter the name of the list using --name')
     parser.add_argument('--name',type=str,help='name of the list')
-    parser.add_argument('--is_seireishi',action='store_true')
+    #parser.add_argument('--is_seireishi',action='store_true')
     parser.add_argument('--gappei',action='store_true')
     args = parser.parse_args()
     if not args.name:
         args.name = input(print('Please enter the list name to generate:'))
 
     prefecture_name = args.name
-    seireishi = args.is_seireishi
-    pref_name_dict, city_name_list, file_num = read_name_list(prefecture_name)
-    xlsx_path = f'b2_032-1_{file_num}'
-    mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
-    desc = f'Hiring Data POI of {prefecture_name}'
-    os.makedirs(os.path.dirname(mod_path), exist_ok=True)
-    with open(mod_path, 'w') as f:
-        f.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
-    for city_name_dict in city_name_list:
-        get_loc_overpy(pref_name_dict, city_name_dict)
-        get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, seireishi)
-        combine_pop_loc(pref_name_dict, city_name_dict)
-        write_mod_txt(pref_name_dict, city_name_dict, mod_path)
-        print(f"{city_name_dict['jp']} {city_name_dict['en']} done")
+    seireishi = args.is_seireishi 
+    nimby_main(prefecture_name,get_loc_overpy)
 
     if args.gappei:
         print('start generating simpler mod')
