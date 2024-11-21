@@ -41,7 +41,7 @@ def read_from_tsv(file_path: str, column_names: list) -> list:
     return datas
 
 
-def combine_pop_loc(name_c, name_w):
+def combine_pop_loc(name_c, name_w, color='000000'):
         loc_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_loc.tsv"
         pop_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_pop.tsv"
         loc_col = ["lon", "lat", "name"]
@@ -68,7 +68,7 @@ def combine_pop_loc(name_c, name_w):
                 if loc_item["name"] == pop_item['name']:
                     todict = {'lon': 0,
                               'lat': 0,
-                              'color': '000000',
+                              'color': color,
                               'text': '',
                               'font_size': 0,
                               'max_lod': 0,
@@ -186,7 +186,7 @@ def write_mod_txt(pref_name, city_name, path):
         file.write(f"tsv=KM_{pref_name['en']}_{city_name['en']}.tsv\n")
 
 
-def nimby_main(list_name,get_loc_func,is_seireishi=False):
+def nimby_main(list_name,get_loc_func,is_seireishi=False,color='000000'):
     pref_name_dict, city_name_list = read_name_list(list_name)
     xlsx_path = f'b2_032-1_{pref_name_dict["num"]}'
     mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
@@ -198,7 +198,7 @@ def nimby_main(list_name,get_loc_func,is_seireishi=False):
     for city_name_dict in city_name_list:
         get_loc_func(pref_name_dict, city_name_dict)
         get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path)
-        combine_pop_loc(pref_name_dict, city_name_dict)
+        combine_pop_loc(pref_name_dict, city_name_dict, color)
         write_mod_txt(pref_name_dict, city_name_dict, mod_path)
         print(f"{city_name_dict['jp']} {city_name_dict['en']} done")
 
