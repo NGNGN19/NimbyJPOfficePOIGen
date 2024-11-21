@@ -35,13 +35,16 @@ if __name__ == "__main__":
     parser.add_argument('--name',type=str,help='name of the list')
     #parser.add_argument('--is_seireishi',action='store_true')
     parser.add_argument('--gappei',action='store_true')
+    parser.add_argument('--color',type=str)
     args = parser.parse_args()
     if not args.name:
         args.name = input(print('Please enter the list name to generate:'))
+    if not args.color:
+        args.color = '000000'
 
     prefecture_name = args.name
     #seireishi = args.is_seireishi
-    nimby.nimby_main(prefecture_name,get_loc_func=get_loc_kokkou)
+    nimby.nimby_main(prefecture_name,get_loc_func=get_loc_kokkou,color=args.color)
 
     if args.gappei:
         print('start generating simpler mod')
