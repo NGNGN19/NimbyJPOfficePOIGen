@@ -3,6 +3,7 @@ def zenkaku_replace(item:str):
     asahikawa = False
     sakai = False
 
+    item = item.replace("ヶ", "ケ")
     item = item.replace("二十一丁目", "２１丁目")
     item = item.replace("二十二丁目", "２２丁目")
     item = item.replace("二十三丁目", "２３丁目")

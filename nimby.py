@@ -19,7 +19,7 @@ def write_to_tsv(output_path: str, file_columns: list, data: list):
 
 def read_from_csv(file_path: str, column_names: list, encoding="utf-8-sig") -> list:
     csv.register_dialect('csv_dialect', delimiter=',', quoting=csv.QUOTE_ALL)
-    with open(file_path, "r",encoding=encoding) as wf:
+    with open(file_path, "r",encoding=encoding,errors='replace') as wf:
         reader = csv.DictReader(wf, fieldnames=column_names, dialect='csv_dialect')
         datas = []
         for row in reader:
@@ -31,7 +31,7 @@ def read_from_csv(file_path: str, column_names: list, encoding="utf-8-sig") -> l
 
 def read_from_tsv(file_path: str, column_names: list) -> list:
     csv.register_dialect('tsv_dialect', delimiter='\t', quoting=csv.QUOTE_ALL)
-    with open(file_path, "r",encoding="utf-8-sig") as wf:
+    with open(file_path, "r",encoding="utf-8-sig",errors='replace') as wf:
         reader = csv.DictReader(wf, fieldnames=column_names, dialect='tsv_dialect')
         datas = []
         for row in reader:
@@ -65,7 +65,7 @@ def combine_pop_loc(name_c, name_w, color='000000'):
         for loc_item in loc_read:
             for pop_item in pop_read:
                 #zenkaku_replace(loc_item)
-                if loc_item["name"] == pop_item['name']:
+                if comparing(loc_item["name"],pop_item['name']):
                     todict = {'lon': 0,
                               'lat': 0,
                               'color': color,
@@ -73,7 +73,7 @@ def combine_pop_loc(name_c, name_w, color='000000'):
                               'font_size': 0,
                               'max_lod': 0,
                               'transparent': 1,
-                              'demand': "default",
+                              'demand': "KM_Office",
                               'population': 0}
                     todict['text'] = loc_item['name']
                     todict['lon'] = loc_item['lon']
@@ -88,6 +88,15 @@ def combine_pop_loc(name_c, name_w, color='000000'):
         write_to_tsv(f"mod/KM_POI_{name_c['en']}/KM_{name_c['en']}_{name_w['en']}.tsv",
                      to_write_col, to_write)
 
+
+def comparing(str1:str,str2:str):
+    replace_map={
+        "ヶ" : "ケ"
+    }
+    for old,new in replace_map.items():
+        str1 = str1.replace(old, new)
+        str2 = str2.replace(old, new)
+    return str1==str2
 
 # city_name = 'Kawasaki'
 # ward_name = 'Chiyoda'

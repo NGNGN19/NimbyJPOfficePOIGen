@@ -6,7 +6,7 @@ import nimby
 import argparse
 
 
-def wrapped_up(toread_path:str,dir_name):
+def wrapped_up(toread_path:str,dir_name, color='000000'):
     toread_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
     toread_list = nimby.read_from_tsv(toread_path, toread_col)
     towrite_list = []
@@ -22,14 +22,14 @@ def wrapped_up(toread_path:str,dir_name):
     towrite_list.append(todict1)
 
     classified_data = defaultdict(list)
-    pattern = re.compile(r"^[^\d１２３４５６７８９丁目]+")
+    pattern = re.compile(r"^(.*?)(?:\d+|[０-９]+)?(丁目|丁)?$")
 
     for item in toread_list:
         if item['text'] == 'text':
             continue
         match = pattern.match(item['text'])
         if match:
-            key = match.group(0)  # 提取共同部分作为分类键
+            key = match.group(1)  # 提取共同部分作为分类键
             classified_data[key].append(item)
 
         # 打印分类结果
@@ -40,7 +40,7 @@ def wrapped_up(toread_path:str,dir_name):
         count = int(0)
         todict = {'lon': 0,
                   'lat': 0,
-                  'color': '000000',
+                  'color': color,
                   'text': key,
                   'font_size': 0,
                   'max_lod': 0,
@@ -66,13 +66,16 @@ def wrapped_up(toread_path:str,dir_name):
 def write_gappei_mod(source_path,target_path):
     old_string = "KM_"
     new_string = "Simp_KM_"
+    str2 = 'Hiring Data'
+    str2n = 'Simpler Hiring Data'
     with open(source_path, "r", encoding="utf-8") as f_src:
         with open(target_path, "w", encoding="utf-8") as f_dst:
             for line in f_src:
-                modified_line = line.replace(old_string, new_string)
+                modified_line = line.replace(str2, str2n)
+                modified_line = modified_line.replace(old_string, new_string)
                 f_dst.write(modified_line)
 
-def gappei(city_name:str):
+def gappei(city_name:str,color='000000'):
     directory = f"mod/KM_POI_{city_name}/"
     mod_path = f"mod/KM_Simp_POI_{city_name}/mod.txt"
     output_dir = os.path.dirname(mod_path)
@@ -85,17 +88,20 @@ def gappei(city_name:str):
         if filename.startswith(f'KM_{city_name}') and filename.endswith(".tsv"):
             filepath = f'{directory}{filename}'
             #print(f'Wrapping {os.path.basename(filepath)}')
-            wrapped_up(filepath,city_name)
+            wrapped_up(filepath,city_name,color)
     write_gappei_mod(f'{directory}/mod.txt',mod_path)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Enter the name of the list using --name')
     parser.add_argument('--name',type=str,help='name of the list')
+    parser.add_argument('--color',type=str)
     args = parser.parse_args()
     if not args.name:
         args.name = input(print('Please enter the list name to generate:'))
+    if not args.color:
+        args.color = '000000'
 
     pref_name = args.name
-    gappei(pref_name)
+    gappei(pref_name,args.color)
 
