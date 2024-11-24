@@ -4,7 +4,7 @@ import overpy
 import pandas as pd
 import os
 import argparse
-from zenkaku_replace import zenkaku_replace
+from zenkaku_replace import zenkaku_replace, simpler_zenkaku_replace
 import gappei
 import nimby
 
@@ -22,8 +22,9 @@ def get_loc_kokkou(pref_name,city_name,encoding='Shift-JIS'):
                    for item in loc_list 
                    if item['市区町村名']==filter_value
     ]
+    do_jo_conv = city_name.get('jo_conv',False)
     for item in filtered_list:
-        item["大字町丁目名"] = zenkaku_replace(item["大字町丁目名"])
+        item["大字町丁目名"] = simpler_zenkaku_replace(item["大字町丁目名"],do_jo_conv)
 
     output_path = f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv"
     to_write_col = ["経度","緯度","大字町丁目名"]
@@ -33,7 +34,7 @@ def get_loc_kokkou(pref_name,city_name,encoding='Shift-JIS'):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Enter the name of the list using --name')
     parser.add_argument('--name',type=str,help='name of the list')
-    #parser.add_argument('--is_seireishi',action='store_true')
+    parser.add_argument('--is_seireishi',action='store_true')
     parser.add_argument('--gappei',action='store_true')
     parser.add_argument('--color',type=str)
     parser.add_argument('--g_color',type=str)
@@ -50,7 +51,7 @@ if __name__ == "__main__":
 
     prefecture_name = args.name
     #seireishi = args.is_seireishi
-    nimby.nimby_main(prefecture_name,get_loc_func=get_loc_kokkou,color=args.color)
+    nimby.nimby_main(prefecture_name,get_loc_func=get_loc_kokkou,color=args.color,is_seireishi=args.is_seireishi)
 
     if args.gappei:
         print('start generating simpler mod')

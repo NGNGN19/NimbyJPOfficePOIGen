@@ -41,7 +41,8 @@ def read_from_tsv(file_path: str, column_names: list) -> list:
     return datas
 
 
-def combine_pop_loc(name_c, name_w, color='000000'):
+def combine_pop_loc(name_c, name_w, **kwargs):
+        color = kwargs.get('color','ffffff')
         loc_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_loc.tsv"
         pop_path = f"data/{name_c['en']}/{name_c['en']}_{name_w['en']}_pop.tsv"
         loc_col = ["lon", "lat", "name"]
@@ -162,9 +163,9 @@ def get_loc_overpy(pref_name, city_name):
             file.write("\t".join(map(str, row)) + "\n")
 
 
-def get_pop_from_excel(pref_name, city_name, path, is_seireishi=False):
+def get_pop_from_excel(pref_name, city_name, path, **kwargs):
     df = pd.read_excel(f'xls/{path}.xlsx', sheet_name=f'{path}')
-
+    is_seireishi = kwargs.get('is_seireishi',False)
     # 假设你要筛选的列名为 'ColumnA'，特定元素为 'Value'
     filter_column_index = 3
     if is_seireishi:
@@ -195,7 +196,7 @@ def write_mod_txt(pref_name, city_name, path):
         file.write(f"tsv=KM_{pref_name['en']}_{city_name['en']}.tsv\n")
 
 
-def nimby_main(list_name,get_loc_func,is_seireishi=False,color='000000'):
+def nimby_main(list_name,get_loc_func,*args,**kwargs):
     pref_name_dict, city_name_list = read_name_list(list_name)
     xlsx_path = f'b2_032-1_{pref_name_dict["num"]}'
     mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
@@ -206,8 +207,8 @@ def nimby_main(list_name,get_loc_func,is_seireishi=False,color='000000'):
 
     for city_name_dict in city_name_list:
         get_loc_func(pref_name_dict, city_name_dict)
-        get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path)
-        combine_pop_loc(pref_name_dict, city_name_dict, color)
+        get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, **kwargs)
+        combine_pop_loc(pref_name_dict, city_name_dict, **kwargs)
         write_mod_txt(pref_name_dict, city_name_dict, mod_path)
         print(f"{city_name_dict['jp']} {city_name_dict['en']} done")
 
@@ -215,7 +216,7 @@ def nimby_main(list_name,get_loc_func,is_seireishi=False,color='000000'):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Enter the name of the list using --name')
     parser.add_argument('--name',type=str,help='name of the list')
-    #parser.add_argument('--is_seireishi',action='store_true')
+    parser.add_argument('--is_seireishi',action='store_true')
     parser.add_argument('--gappei',action='store_true')
     args = parser.parse_args()
     if not args.name:

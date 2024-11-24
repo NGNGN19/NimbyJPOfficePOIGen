@@ -75,9 +75,10 @@ def write_gappei_mod(source_path,target_path):
                 modified_line = modified_line.replace(old_string, new_string)
                 f_dst.write(modified_line)
 
-def gappei(city_name:str,color='000000'):
-    directory = f"mod/KM_POI_{city_name}/"
-    mod_path = f"mod/KM_Simp_POI_{city_name}/mod.txt"
+def gappei(city_name:str,color='ff0000'):
+    inner_name=nimby.read_name_list(city_name)[0]['en']
+    directory = f"mod/KM_POI_{inner_name}/"
+    mod_path = f"mod/KM_Simp_POI_{inner_name}/mod.txt"
     output_dir = os.path.dirname(mod_path)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
@@ -85,10 +86,10 @@ def gappei(city_name:str,color='000000'):
     # 遍历目录中的文件
     for filename in os.listdir(directory):
         # 检查文件名是否符合特定的结构，例如以 "file" 开头并且以 ".txt" 结尾
-        if filename.startswith(f'KM_{city_name}') and filename.endswith(".tsv"):
+        if filename.startswith(f'KM_{inner_name}') and filename.endswith(".tsv"):
             filepath = f'{directory}{filename}'
             #print(f'Wrapping {os.path.basename(filepath)}')
-            wrapped_up(filepath,city_name,color)
+            wrapped_up(filepath,inner_name,color)
     write_gappei_mod(f'{directory}/mod.txt',mod_path)
 
 
