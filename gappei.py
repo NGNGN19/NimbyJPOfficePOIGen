@@ -76,13 +76,10 @@ def write_gappei_mod(source_path,target_path):
                 f_dst.write(modified_line)
 
 def gappei(city_name:str,color='ff0000'):
-    inner_name=nimby.read_name_list(city_name)[0]['en']
+    inner_name_list, city_name_list=nimby.read_name_list(city_name)
+    inner_name = inner_name_list['en']
     directory = f"mod/KM_POI_{inner_name}/"
-    mod_path = f"mod/KM_Simp_POI_{inner_name}/mod.txt"
-    output_dir = os.path.dirname(mod_path)
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
-
+    nimby.write_mod_txt(inner_name_list,city_name_list,prefix='_Simp')
     # 遍历目录中的文件
     for filename in os.listdir(directory):
         # 检查文件名是否符合特定的结构，例如以 "file" 开头并且以 ".txt" 结尾
@@ -90,7 +87,7 @@ def gappei(city_name:str,color='ff0000'):
             filepath = f'{directory}{filename}'
             #print(f'Wrapping {os.path.basename(filepath)}')
             wrapped_up(filepath,inner_name,color)
-    write_gappei_mod(f'{directory}/mod.txt',mod_path)
+    #write_gappei_mod(f'{directory}/mod.txt',mod_path)
 
 
 if __name__ == "__main__":

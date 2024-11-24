@@ -184,32 +184,32 @@ def get_pop_from_excel(pref_name, city_name, path, **kwargs):
                      sep='\t', index=False, header=False)
 
 
-def write_mod_txt(pref_name, city_name, path):
-    file_path = path
+def write_mod_txt(pref_name, city_list,prefix=''):
+    file_path = f"mod/KM{prefix}_POI_{pref_name['en']}/mod.txt"
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    desc = f'Hiring Data POI of {pref_name["en"]}'
     with open(file_path, 'a',encoding='utf-8') as file:
-        file.write(f"\n[POILayer]\n")
-        file.write(f"id=KM_{pref_name['en']}_{city_name['en']}\n")
-        if "add" in city_name:
-            file.write(f"name={pref_name['jp']}——{city_name['add']}——{city_name['jp']}\n")
-        else:
-            file.write(f"name={pref_name['jp']}——{city_name['jp']}\n")
-        file.write(f"tsv=KM_{pref_name['en']}_{city_name['en']}.tsv\n")
+        file.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
+        for city_name in city_list:
+            file.write(f"\n[POILayer]\n")
+            file.write(f"id=KM{prefix}_{pref_name['en']}_{city_name['en']}\n")
+            if "add" in city_name:
+                file.write(f"name={pref_name['jp']}—{city_name['add']}—{city_name['jp']}{prefix}\n")
+            else:
+                file.write(f"name={pref_name['jp']}—{city_name['jp']}{prefix}\n")
+            file.write(f"tsv=KM_{pref_name['en']}_{city_name['en']}.tsv\n")
 
 
 def nimby_main(list_name,get_loc_func,*args,**kwargs):
     pref_name_dict, city_name_list = read_name_list(list_name)
     xlsx_path = f'b2_032-1_{pref_name_dict["num"]}'
-    mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
-    desc = f'Hiring Data POI of {pref_name_dict["en"]}'
-    os.makedirs(os.path.dirname(mod_path), exist_ok=True)
-    with open(mod_path, 'w') as f:
-        f.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
+    #mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
+    write_mod_txt(pref_name_dict, city_name_list)
 
     for city_name_dict in city_name_list:
         get_loc_func(pref_name_dict, city_name_dict)
         get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, **kwargs)
         combine_pop_loc(pref_name_dict, city_name_dict, **kwargs)
-        write_mod_txt(pref_name_dict, city_name_dict, mod_path)
         print(f"{city_name_dict['jp']} {city_name_dict['en']} done")
 
 
