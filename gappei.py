@@ -79,7 +79,7 @@ def gappei(city_name:str,color='ff0000'):
     inner_name_list, city_name_list=nimby.read_name_list(city_name)
     inner_name = inner_name_list['en']
     directory = f"mod/KM_POI_{inner_name}/"
-    nimby.write_mod_txt(inner_name_list,city_name_list,prefix='_Simp')
+    nimby.write_mod_txt(inner_name_list,city_name_list,prefix='Simp_')
     # 遍历目录中的文件
     for filename in os.listdir(directory):
         # 检查文件名是否符合特定的结构，例如以 "file" 开头并且以 ".txt" 结尾
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     if not args.name:
         args.name = input(print('Please enter the list name to generate:'))
     if not args.color:
-        args.color = '000000'
+        args.color = 'ff0000'
 
     pref_name = args.name
     gappei(pref_name,args.color)
