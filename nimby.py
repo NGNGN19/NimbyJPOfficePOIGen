@@ -52,16 +52,6 @@ def combine_pop_loc(name_c, name_w, **kwargs):
         pop_read = read_from_tsv(pop_path, pop_col)
         # print(pop_read)
         to_write = []
-        todict1 = {'lon': 'lon',
-                   'lat': 'lat',
-                   'color': 'color',
-                   'text': 'text',
-                   'font_size': 'font_size',
-                   'max_lod': 'max_lod',
-                   'transparent': 'transparent',
-                   'demand': 'demand',
-                   'population': 'population'}
-        to_write.append(todict1)
 
         for pop_item in pop_read:
             if kwargs['filter'] :
@@ -95,7 +85,17 @@ def combine_pop_loc(name_c, name_w, **kwargs):
                     to_write.append(todict)
 
         to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
-        if to_write:
+        if to_write:           
+            todict1 = {'lon': 'lon',
+                    'lat': 'lat',
+                    'color': 'color',
+                    'text': 'text',
+                    'font_size': 'font_size',
+                    'max_lod': 'max_lod',
+                    'transparent': 'transparent',
+                    'demand': 'demand',
+                    'population': 'population'}
+            to_write.insert(0,todict1)
             write_to_tsv(f"mod/KM_{kwargs['prefix']}POI_{name_c['en']}/{kwargs['prefix']}KM_{name_c['en']}_{name_w['en']}.tsv",
                         to_write_col, to_write)
 
@@ -198,13 +198,13 @@ def write_mod_txt(pref_name, city_list,**kwargs):
     file_path = f"mod/KM_{kwargs['prefix']}POI_{pref_name['en']}/mod.txt"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     desc = f"{kwargs['prefix']}Hiring Data POI of {pref_name['en']}"
-    with open(file_path, 'a',encoding='utf-8') as file:
+    with open(file_path, 'w',encoding='utf-8') as file:
         file.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
         for city_name in city_list:
             file.write(f"\n[POILayer]\n")
             file.write(f"id=KM_{kwargs['prefix']}{pref_name['en']}_{city_name['en']}\n")
             if "add" in city_name:
-                file.write(f"name={kwargs['prefix']}{pref_name['jp']}—{city_name['add']}—{city_name['jp']}\n")
+                file.write(f"name={kwargs['prefix']}{pref_name['jp']}—{city_name['add']}{city_name['jp']}\n")
             else:
                 file.write(f"name={kwargs['prefix']}{pref_name['jp']}—{city_name['jp']}\n")
             file.write(f"tsv={kwargs['prefix']}KM_{pref_name['en']}_{city_name['en']}.tsv\n")
