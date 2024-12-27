@@ -6,7 +6,7 @@ import nimby
 import argparse
 
 
-def wrapped_up(toread_path:str,dir_name, color='000000'):
+def wrapped_up(toread_path:str,dir_name,**kwargs):
     toread_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
     toread_list = nimby.read_from_tsv(toread_path, toread_col)
     towrite_list = []
@@ -40,7 +40,7 @@ def wrapped_up(toread_path:str,dir_name, color='000000'):
         count = int(0)
         todict = {'lon': 0,
                   'lat': 0,
-                  'color': color,
+                  'color': kwargs['color'],
                   'text': key,
                   'font_size': 0,
                   'max_lod': 0,
@@ -54,6 +54,8 @@ def wrapped_up(toread_path:str,dir_name, color='000000'):
                 items['population'] = int(0)
             pop_store = pop_store + int(items['population'])
             count = count + 1
+        if kwargs['g_filter'] and pop_store < kwargs['g_filter']:
+            continue
         todict['lon'] = round(lon_store / count, 7)
         todict['lat'] = round(lat_store / count, 7)
         todict['population'] = pop_store
@@ -61,7 +63,7 @@ def wrapped_up(toread_path:str,dir_name, color='000000'):
     # print(towrite_list)
     to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
     basename = os.path.basename(toread_path)
-    nimby.write_to_tsv(f"mod/KM_Simp_POI_{dir_name}/Simp_{basename}", to_write_col, towrite_list)
+    nimby.write_to_tsv(f"mod/KM_{kwargs['g_prefix']}_POI_{dir_name}/{kwargs['g_prefix']}_{basename}", to_write_col, towrite_list)
 
 def write_gappei_mod(source_path,target_path):
     old_string = "KM_"
@@ -75,31 +77,30 @@ def write_gappei_mod(source_path,target_path):
                 modified_line = modified_line.replace(old_string, new_string)
                 f_dst.write(modified_line)
 
-def gappei(city_name:str,color='ff0000'):
+def gappei(city_name:str,**kwargs):
     inner_name_list, city_name_list=nimby.read_name_list(city_name)
     inner_name = inner_name_list['en']
     directory = f"mod/KM_POI_{inner_name}/"
-    nimby.write_mod_txt(inner_name_list,city_name_list,prefix='Simp_')
+    nimby.write_mod_txt(inner_name_list,city_name_list,**kwargs)
     # 遍历目录中的文件
     for filename in os.listdir(directory):
         # 检查文件名是否符合特定的结构，例如以 "file" 开头并且以 ".txt" 结尾
         if filename.startswith(f'KM_{inner_name}') and filename.endswith(".tsv"):
             filepath = f'{directory}{filename}'
             #print(f'Wrapping {os.path.basename(filepath)}')
-            wrapped_up(filepath,inner_name,color)
+            wrapped_up(filepath,inner_name,args)
     #write_gappei_mod(f'{directory}/mod.txt',mod_path)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Enter the name of the list using --name')
-    parser.add_argument('--name',type=str,help='name of the list')
-    parser.add_argument('--color',type=str)
+    parser.add_argument('--name',type=str,help='name of the list',required=True)
+    parser.add_argument('--color',type=str,default='ff0000')
+    parser.add_argument('--g_filter',type=int)
+    parser.add_argument('--g_prefix',default='Simp_')
     args = parser.parse_args()
-    if not args.name:
-        args.name = input(print('Please enter the list name to generate:'))
-    if not args.color:
-        args.color = 'ff0000'
+    args_dict = vars(args)
 
     pref_name = args.name
-    gappei(pref_name,args.color)
+    gappei(pref_name,**args_dict)
 

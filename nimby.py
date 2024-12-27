@@ -63,8 +63,17 @@ def combine_pop_loc(name_c, name_w, **kwargs):
                    'population': 'population'}
         to_write.append(todict1)
 
-        for loc_item in loc_read:
-            for pop_item in pop_read:
+        for pop_item in pop_read:
+            if kwargs['filter'] :
+                if pop_item['population']=='-':
+                    continue
+                elif int(pop_item['population']) < kwargs['filter']:
+                    continue
+                else:
+                    #print(pop_item['population'])
+                    pass
+            for loc_item in loc_read:
+                
                 #zenkaku_replace(loc_item)
                 if comparing(loc_item["name"],pop_item['name']):
                     todict = {'lon': 0,
@@ -86,8 +95,9 @@ def combine_pop_loc(name_c, name_w, **kwargs):
                     to_write.append(todict)
 
         to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
-        write_to_tsv(f"mod/KM_POI_{name_c['en']}/KM_{name_c['en']}_{name_w['en']}.tsv",
-                     to_write_col, to_write)
+        if to_write:
+            write_to_tsv(f"mod/KM_{kwargs['prefix']}POI_{name_c['en']}/{kwargs['prefix']}KM_{name_c['en']}_{name_w['en']}.tsv",
+                        to_write_col, to_write)
 
 
 def comparing(str1:str,str2:str):
@@ -165,10 +175,10 @@ def get_loc_overpy(pref_name, city_name):
 
 def get_pop_from_excel(pref_name, city_name, path, **kwargs):
     df = pd.read_excel(f'xls/{path}.xlsx', sheet_name=f'{path}')
-    is_seireishi = kwargs.get('is_seireishi',False)
+    #is_seireishi = kwargs.get('is_seireishi',False)
     # 假设你要筛选的列名为 'ColumnA'，特定元素为 'Value'
     filter_column_index = 3
-    if is_seireishi:
+    if kwargs['is_seireishi']:
         filter_value = f"{pref_name['jp']}{city_name['jp']}"
     elif 'add' in city_name:
         filter_value = f"{city_name['add']}{city_name['jp']}"
@@ -184,31 +194,32 @@ def get_pop_from_excel(pref_name, city_name, path, **kwargs):
                      sep='\t', index=False, header=False)
 
 
-def write_mod_txt(pref_name, city_list,prefix=''):
-    file_path = f"mod/KM_{prefix}POI_{pref_name['en']}/mod.txt"
+def write_mod_txt(pref_name, city_list,**kwargs):
+    file_path = f"mod/KM_{kwargs['prefix']}POI_{pref_name['en']}/mod.txt"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    desc = f'{prefix}Hiring Data POI of {pref_name["en"]}'
+    desc = f"{kwargs['prefix']}Hiring Data POI of {pref_name['en']}"
     with open(file_path, 'a',encoding='utf-8') as file:
         file.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
         for city_name in city_list:
             file.write(f"\n[POILayer]\n")
-            file.write(f"id=KM_{prefix}{pref_name['en']}_{city_name['en']}\n")
+            file.write(f"id=KM_{kwargs['prefix']}{pref_name['en']}_{city_name['en']}\n")
             if "add" in city_name:
-                file.write(f"name={prefix}{pref_name['jp']}—{city_name['add']}—{city_name['jp']}\n")
+                file.write(f"name={kwargs['prefix']}{pref_name['jp']}—{city_name['add']}—{city_name['jp']}\n")
             else:
-                file.write(f"name={pref_name['jp']}—{city_name['jp']}{prefix}\n")
-            file.write(f"tsv={prefix}KM_{pref_name['en']}_{city_name['en']}.tsv\n")
+                file.write(f"name={kwargs['prefix']}{pref_name['jp']}—{city_name['jp']}\n")
+            file.write(f"tsv={kwargs['prefix']}KM_{pref_name['en']}_{city_name['en']}.tsv\n")
 
 
-def nimby_main(list_name,get_loc_func,*args,**kwargs):
+def nimby_main(list_name,get_loc_func,**kwargs):
     pref_name_dict, city_name_list = read_name_list(list_name)
     xlsx_path = f'b2_032-1_{pref_name_dict["num"]}'
     #mod_path = f"mod/KM_POI_{pref_name_dict['en']}/mod.txt"
-    write_mod_txt(pref_name_dict, city_name_list)
+    write_mod_txt(pref_name_dict, city_name_list,**kwargs)
 
     for city_name_dict in city_name_list:
-        get_loc_func(pref_name_dict, city_name_dict)
-        get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, **kwargs)
+        if not kwargs['pass_data_collect']:
+            get_loc_func(pref_name_dict, city_name_dict)
+            get_pop_from_excel(pref_name_dict, city_name_dict, xlsx_path, **kwargs)
         combine_pop_loc(pref_name_dict, city_name_dict, **kwargs)
         print(f"{city_name_dict['jp']} {city_name_dict['en']} done")
 
