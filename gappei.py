@@ -40,7 +40,7 @@ def wrapped_up(toread_path:str,dir_name,**kwargs):
         count = int(0)
         todict = {'lon': 0,
                   'lat': 0,
-                  'color': kwargs['color'],
+                  'color': kwargs['g_color'],
                   'text': key,
                   'font_size': 0,
                   'max_lod': 0,
@@ -63,7 +63,7 @@ def wrapped_up(toread_path:str,dir_name,**kwargs):
     # print(towrite_list)
     to_write_col = ['lon', 'lat', 'color', 'text', 'font_size', 'max_lod', 'transparent', 'demand', 'population']
     basename = os.path.basename(toread_path)
-    nimby.write_to_tsv(f"mod/KM_{kwargs['g_prefix']}_POI_{dir_name}/{kwargs['g_prefix']}_{basename}", to_write_col, towrite_list)
+    nimby.write_to_tsv(f"mod/KM_{kwargs['g_prefix']}POI_{dir_name}/{kwargs['g_prefix']}{basename}", to_write_col, towrite_list)
 
 def write_gappei_mod(source_path,target_path):
     old_string = "KM_"
@@ -81,14 +81,14 @@ def gappei(city_name:str,**kwargs):
     inner_name_list, city_name_list=nimby.read_name_list(city_name)
     inner_name = inner_name_list['en']
     directory = f"mod/KM_POI_{inner_name}/"
-    nimby.write_mod_txt(inner_name_list,city_name_list,**kwargs)
+    nimby.write_mod_txt(inner_name_list,city_name_list,mod_prefix=kwargs['g_prefix'],**kwargs)
     # 遍历目录中的文件
     for filename in os.listdir(directory):
         # 检查文件名是否符合特定的结构，例如以 "file" 开头并且以 ".txt" 结尾
         if filename.startswith(f'KM_{inner_name}') and filename.endswith(".tsv"):
             filepath = f'{directory}{filename}'
             #print(f'Wrapping {os.path.basename(filepath)}')
-            wrapped_up(filepath,inner_name,args)
+            wrapped_up(filepath,inner_name,**kwargs)
     #write_gappei_mod(f'{directory}/mod.txt',mod_path)
 
 

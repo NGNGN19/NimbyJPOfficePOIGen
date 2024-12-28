@@ -194,20 +194,22 @@ def get_pop_from_excel(pref_name, city_name, path, **kwargs):
                      sep='\t', index=False, header=False)
 
 
-def write_mod_txt(pref_name, city_list,**kwargs):
-    file_path = f"mod/KM_{kwargs['prefix']}POI_{pref_name['en']}/mod.txt"
+def write_mod_txt(pref_name, city_list,mod_prefix='',**kwargs):
+    if kwargs['prefix'] and mod_prefix == '':
+        mod_prefix=kwargs['prefix']
+    file_path = f"mod/KM_{mod_prefix}POI_{pref_name['en']}/mod.txt"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    desc = f"{kwargs['prefix']}Hiring Data POI of {pref_name['en']}"
+    desc = f"{mod_prefix}Hiring Data POI of {pref_name['en']}"
     with open(file_path, 'w',encoding='utf-8') as file:
         file.write(f"[ModMeta]\nschema=1\nname={desc}\nauthor=KaraageMajo\ndesc={desc}\nversion=1.0.0\n")
         for city_name in city_list:
             file.write(f"\n[POILayer]\n")
-            file.write(f"id=KM_{kwargs['prefix']}{pref_name['en']}_{city_name['en']}\n")
+            file.write(f"id=KM_{mod_prefix}{pref_name['en']}_{city_name['en']}\n")
             if "add" in city_name:
-                file.write(f"name={kwargs['prefix']}{pref_name['jp']}—{city_name['add']}{city_name['jp']}\n")
+                file.write(f"name={mod_prefix}{pref_name['jp']}—{city_name['add']}{city_name['jp']}\n")
             else:
-                file.write(f"name={kwargs['prefix']}{pref_name['jp']}—{city_name['jp']}\n")
-            file.write(f"tsv={kwargs['prefix']}KM_{pref_name['en']}_{city_name['en']}.tsv\n")
+                file.write(f"name={mod_prefix}{pref_name['jp']}—{city_name['jp']}\n")
+            file.write(f"tsv={mod_prefix}KM_{pref_name['en']}_{city_name['en']}.tsv\n")
 
 
 def nimby_main(list_name,get_loc_func,**kwargs):
