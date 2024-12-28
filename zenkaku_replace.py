@@ -150,7 +150,7 @@ def zenkaku_replace(item:str):
 
     return item
 
-def simpler_zenkaku_replace(item,do_jo_conv=False,do_cho_conv=False):
+def simpler_zenkaku_replace(item,do_jo_conv=False,do_cho_conv=False,do_hancho_conv=False):
     if item == None:
         item = ""
     item = str(item)
@@ -195,7 +195,29 @@ def simpler_zenkaku_replace(item,do_jo_conv=False,do_cho_conv=False):
         item = item.replace("七丁", "７丁")
         item = item.replace("八丁", "８丁")
         item = item.replace("九丁", "９丁")
-        item = item.replace("十丁", "１０丁")    
+        item = item.replace("十丁", "１０丁") 
+
+    if do_hancho_conv:
+        item = item.replace("十一番町", "１１番町")
+        item = item.replace("十二番町", "１２番町")
+        item = item.replace("十三番町", "１３番町")
+        item = item.replace("十四番町", "１４番町")
+        item = item.replace("十五番町", "１５番町")
+        item = item.replace("十六番町", "１６番町")
+        item = item.replace("十七番町", "１７番町")
+        item = item.replace("十八番町", "１８番町")
+        item = item.replace("十九番町", "１９番町")
+        item = item.replace("一番町", "１番町")
+        item = item.replace("二番町", "２番町")
+        item = item.replace("三番町", "３番町")
+        item = item.replace("四番町", "４番町")
+        item = item.replace("五番町", "５番町")
+        item = item.replace("六番町", "６番町")
+        item = item.replace("七番町", "７番町")
+        item = item.replace("八番町", "８番町")
+        item = item.replace("九番町", "９番町")
+        item = item.replace("十番町", "１０番町")
+
     item = item.replace("ヶ", "ケ")
     item = item.replace("二十一丁目", "２１丁目")
     item = item.replace("二十二丁目", "２２丁目")
