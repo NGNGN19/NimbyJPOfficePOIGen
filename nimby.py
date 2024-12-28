@@ -4,7 +4,7 @@ import overpy
 import pandas as pd
 import os
 import argparse
-from zenkaku_replace import zenkaku_replace
+from zenkaku_replace import zenkaku_replace, simpler_zenkaku_replace
 import gappei
 
 
@@ -189,6 +189,10 @@ def get_pop_from_excel(pref_name, city_name, path, **kwargs):
     # 提取筛选行中的特定列，假设这些列是第1列和第2列（ColumnB 和 ColumnC）
     selected_column_indices = [4, 6]
     result_df = filtered_df.iloc[:, selected_column_indices]
+    do_zr = city_name.get('pop_zr',False)
+    if do_zr :
+        #result_df['Unnamed: 4'].map(str)
+        result_df['Unnamed: 4'] = result_df['Unnamed: 4'].apply(simpler_zenkaku_replace)
     # 打印结果
     result_df.to_csv(f'data/{pref_name["en"]}/{pref_name["en"]}_{city_name["en"]}_pop.tsv',
                      sep='\t', index=False, header=False)

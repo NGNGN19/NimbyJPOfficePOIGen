@@ -150,7 +150,10 @@ def zenkaku_replace(item:str):
 
     return item
 
-def simpler_zenkaku_replace(item:str,do_jo_conv):
+def simpler_zenkaku_replace(item,do_jo_conv=False,do_cho_conv=False):
+    if item == None:
+        item = ""
+    item = str(item)
     if do_jo_conv:
         item = item.replace("十一条", "１１条")
         item = item.replace("十二条", "１２条")
@@ -172,7 +175,27 @@ def simpler_zenkaku_replace(item:str,do_jo_conv):
         item = item.replace("八条", "８条")
         item = item.replace("九条", "９条")
         item = item.replace("十条", "１０条")
-        
+    
+    if do_cho_conv:
+        item = item.replace("十一丁", "１１丁")
+        item = item.replace("十二丁", "１２丁")
+        item = item.replace("十三丁", "１３丁")
+        item = item.replace("十四丁", "１４丁")
+        item = item.replace("十五丁", "１５丁")
+        item = item.replace("十六丁", "１６丁")
+        item = item.replace("十七丁", "１７丁")
+        item = item.replace("十八丁", "１８丁")
+        item = item.replace("十九丁", "１９丁")
+        item = item.replace("一丁", "１丁")
+        item = item.replace("二丁", "２丁")
+        item = item.replace("三丁", "３丁")
+        item = item.replace("四丁", "４丁")
+        item = item.replace("五丁", "５丁")
+        item = item.replace("六丁", "６丁")
+        item = item.replace("七丁", "７丁")
+        item = item.replace("八丁", "８丁")
+        item = item.replace("九丁", "９丁")
+        item = item.replace("十丁", "１０丁")    
     item = item.replace("ヶ", "ケ")
     item = item.replace("二十一丁目", "２１丁目")
     item = item.replace("二十二丁目", "２２丁目")
@@ -194,24 +217,15 @@ def simpler_zenkaku_replace(item:str,do_jo_conv):
     item = item.replace("十七丁目", "１７丁目")
     item = item.replace("十八丁目", "１８丁目")
     item = item.replace("十九丁目", "１９丁目")
-    item = item.replace("十一丁", "１１丁")
-    item = item.replace("十二丁", "１２丁")
-    item = item.replace("十三丁", "１３丁")
-    item = item.replace("十四丁", "１４丁")
-    item = item.replace("十五丁", "１５丁")
-    item = item.replace("十六丁", "１６丁")
-    item = item.replace("十七丁", "１７丁")
-    item = item.replace("十八丁", "１８丁")
-    item = item.replace("十九丁", "１９丁")
-    item = item.replace("一丁", "１丁")
-    item = item.replace("二丁", "２丁")
-    item = item.replace("三丁", "３丁")
-    item = item.replace("四丁", "４丁")
-    item = item.replace("五丁", "５丁")
-    item = item.replace("六丁", "６丁")
-    item = item.replace("七丁", "７丁")
-    item = item.replace("八丁", "８丁")
-    item = item.replace("九丁", "９丁")
-    item = item.replace("十丁", "１０丁")
+    item = item.replace("一丁目","１丁目")
+    item = item.replace("二丁目","２丁目")
+    item = item.replace("三丁目","３丁目")
+    item = item.replace("四丁目","４丁目")
+    item = item.replace("五丁目","５丁目")
+    item = item.replace("六丁目","６丁目")
+    item = item.replace("七丁目","７丁目")
+    item = item.replace("八丁目","８丁目")
+    item = item.replace("九丁目","９丁目")
+    item = item.replace("十丁目","１０丁目")
 
     return item

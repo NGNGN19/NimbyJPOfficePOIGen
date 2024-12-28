@@ -25,8 +25,9 @@ def get_loc_kokkou(pref_name,city_name,encoding='Shift-JIS'):
                    if item['市区町村名']==filter_value
     ]
     do_jo_conv = city_name.get('jo_conv',False)
+    do_cho_conv = city_name.get('cho_conv',False)
     for item in filtered_list:
-        item["大字町丁目名"] = simpler_zenkaku_replace(item["大字町丁目名"],do_jo_conv)
+        item["大字町丁目名"] = simpler_zenkaku_replace(item["大字町丁目名"],do_jo_conv=do_jo_conv,do_cho_conv=do_cho_conv)
 
     output_path = f"data/{pref_name['en']}/{pref_name['en']}_{city_name['en']}_loc.tsv"
     to_write_col = ["経度","緯度","大字町丁目名"]
